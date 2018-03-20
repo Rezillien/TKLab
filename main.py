@@ -18,6 +18,6 @@ while True:
     tok = lexer.token()
     if not tok:
         break  # No more input
-    # column = scanner.find_column(text, tok)
+    column = scanner.find_column(text, tok)
     print("(%d): %s(%s)" % (tok.lineno, tok.type, tok.value))
 

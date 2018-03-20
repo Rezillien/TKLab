@@ -11,7 +11,7 @@ tokens = [
     'ID',
     'INT',
     'FLOAT',
-    'COMMENT'
+    'COMMENT',
 ]
 
 literals = [
@@ -99,42 +99,42 @@ def t_ISEQUAL(t):
 
 
 def t_IF(t):
-    r'if'
+    r'if\s'
     return t
 
 
 def t_ELSE(t):
-    r'else'
+    r'else\s'
     return t
 
 
 def t_WHILE(t):
-    r'while'
+    r'while\s'
     return t
 
 
 def t_BREAK(t):
-    r'break'
+    r'break\s'
     return t
 
 
 def t_CONTINUE(t):
-    r'continue'
+    r'continue\s'
     return t
 
 
 def t_RETURN(t):
-    r'return'
+    r'return\s'
     return t
 
 
 def t_ZEROS(t):
-    r'zeros'
+    r'zeros\s'
     return t
 
 
 def t_ONES(t):
-    r'ones'
+    r'ones\s'
     return t
 
 
@@ -147,6 +147,10 @@ def t_EYE(t):
     r'eye'
     return t
 
+def t_NAMEERROR(t):
+    r'[+-]?([0-9]+|([0-9]*[.])?[0-9]+)[a-zA-Z]'
+    print("Illegal ID name '%s'" % t.value[0])
+    t.lexer.skip(1)
 
 def t_ID(t):
     r'[a-zA-Z_]\w*'
@@ -166,6 +170,8 @@ def t_FLOAT(t):
 def t_COMMENT(t):
     r'\#.*'
     pass
+
+
 
 
 t_ignore = '  \t'
