@@ -4,7 +4,7 @@ tokens = [
     'DOTPLUS', 'DOTMINUS', 'DOTMULTIPLE', 'DOTDIVIDE',
     'EQUAL', 'PLUSEQUAL', 'MINUSEQUAL', 'MULTIPLEEQUAL', 'DIVIDEEQUAL',
     'ISLESS', 'ISMORE', 'ISLESSOREQUAL', 'ISMOREOREQUAL', 'ISNOTEQUAL', 'ISEQUAL',
-    'IF', 'ELSE', 'WHILE',
+    'IF', 'ELSE', 'WHILE', 'FOR',
     'BREAK', 'CONTINUE', 'RETURN',
     'EYE', 'ZEROS', 'ONES',
     'PRINT',
@@ -110,6 +110,10 @@ def t_ELSE(t):
 
 def t_WHILE(t):
     r'while\s'
+    return t
+
+def t_FOR(t):
+    r'for\s'
     return t
 
 
