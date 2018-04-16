@@ -1,18 +1,5 @@
 import ply.lex as lex
 
-tokens = [
-    'DOTPLUS', 'DOTMINUS', 'DOTMULTIPLE', 'DOTDIVIDE',
-    'EQUAL', 'PLUSEQUAL', 'MINUSEQUAL', 'MULTIPLEEQUAL', 'DIVIDEEQUAL',
-    'ISLESS', 'ISMORE', 'ISLESSOREQUAL', 'ISMOREOREQUAL', 'ISNOTEQUAL', 'ISEQUAL',
-    'IF', 'ELSE', 'WHILE', 'FOR',
-    'BREAK', 'CONTINUE', 'RETURN',
-    'EYE', 'ZEROS', 'ONES',
-    'PRINT',
-    'ID',
-    'INT',
-    'FLOAT',
-    'COMMENT',
-]
 
 literals = [
     '+', '-', '*', '/',
@@ -20,6 +7,21 @@ literals = [
     ':',
     ',', ';',
     '\'',
+    '=', '>', '<',
+]
+tokens = [
+    'DOTPLUS', 'DOTMINUS', 'DOTMULTIPLE', 'DOTDIVIDE',
+    'EQUAL', 'PLUSEQUAL', 'MINUSEQUAL', 'MULTIPLEEQUAL', 'DIVIDEEQUAL',
+    'ISLESSOREQUAL', 'ISMOREOREQUAL', 'ISNOTEQUAL', 'ISEQUAL',
+    'IF', 'ELSE', 'WHILE', 'FOR',
+    'BREAK', 'CONTINUE', 'RETURN',
+    'EYE', 'ZEROS', 'ONES',
+    'PRINT',
+    'ID',
+    'INT',
+    'FLOAT',
+    'STRING',
+    'COMMENT',
 ]
 
 
@@ -64,17 +66,7 @@ def t_DIVIDEEQUAL(t):
 
 
 def t_EQUAL(t):
-    r'='
-    return t
-
-
-def t_ISLESS(t):
-    r'<'
-    return t
-
-
-def t_ISMORE(t):
-    r'>'
+    r'=='
     return t
 
 
@@ -99,56 +91,56 @@ def t_ISEQUAL(t):
 
 
 def t_IF(t):
-    r'if\s'
+    r'\bif\b'
     return t
 
 
 def t_ELSE(t):
-    r'else\s'
+    r'\belse\b'
     return t
 
 
 def t_WHILE(t):
-    r'while\s'
+    r'\bwhile\b'
     return t
 
 def t_FOR(t):
-    r'for\s'
+    r'\bfor\b'
     return t
 
 
 def t_BREAK(t):
-    r'break\s'
+    r'\bbreak\b'
     return t
 
 
 def t_CONTINUE(t):
-    r'continue\s'
+    r'\bcontinue\b'
     return t
 
 
 def t_RETURN(t):
-    r'return\s'
+    r'\breturn\b'
     return t
 
 
 def t_ZEROS(t):
-    r'zeros\s'
+    r'\bzeros\b'
     return t
 
 
 def t_ONES(t):
-    r'ones\s'
+    r'\bones\b'
     return t
 
 
 def t_PRINT(t):
-    r'print'
+    r'\bprint\b'
     return t
 
 
 def t_EYE(t):
-    r'eye'
+    r'\beye\b'
     return t
 
 def t_NAMEERROR(t):
@@ -160,14 +152,16 @@ def t_ID(t):
     r'[a-zA-Z_]\w*'
     return t
 
-
-def t_INT(t):
-    r'[0-9]+'
+def t_FLOAT(t):
+    r"\d+(\.\d*)|\.\d+"
     return t
 
+def t_INT(t):
+    r'\d+'
+    return t
 
-def t_FLOAT(t):
-    r'[+-]?([0-9]*[.])?[0-9]+'
+def t_STRING(t):
+    r'\"([^\\\n]|(\\.))*?\"'
     return t
 
 
@@ -194,5 +188,8 @@ def t_error(t):
 lexer = lex.lex()
 
 
-def find_column(text, tok):
-    return None
+def find_column(token):
+    last_cr = lexer.lexdata.rfind('\n', 0, token.lexpos)
+    if last_cr < 0:
+        last_cr = 0
+    return token.lexpos - last_cr

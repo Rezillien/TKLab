@@ -1,9 +1,47 @@
-A ===== zeros(5.7);  # create 5x5 matrix filled with zeros
-B = ones(7);   # create 7x7 matrix filled with ones
-I = eye(10);   # create 10x10 matrix filled with ones on diagonal and zeros elsewhere
-D1 = A.+B' ; # add element-wise A with transpose of B
-23D2 -= A.-B' ; # substract element-wise A with transpose of B
-ifelse
-D3 *= A.*B' ; # multiply element-wise A with transpose of B
-D4 /= A./B' ; # divide element-wise A with transpose of B
-return  D4
+# control flow instruction
+
+N = 10;
+M = 20;
+for i = 1:N {
+    for j = i:M {
+        print i, j;
+    }
+}
+
+if(N==10)
+    print "N==10";
+else if(N!=10)
+    print "N!=10";
+
+if(N>5)
+    print "N>5";
+else if(N>=0)
+    print "N>=0";
+
+if(N<10)
+    print "N<10";
+else if(N<=15)
+    print "N<=15";
+
+while(k>0) {
+    if(k<5)
+        i = 1;
+    else if(k<10)
+        i = 2;
+    else
+        i = 3;
+
+    k = k - 1;
+}
+
+
+for i = 1:N {
+    if(i<=N/4)
+        print i;
+    else if(i<=N/2)
+        break;
+    else
+        continue;
+}
+
+

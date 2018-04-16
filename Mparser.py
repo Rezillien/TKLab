@@ -6,16 +6,8 @@ import ply.yacc as yacc
 tokens = scanner.tokens
 
 precedence = (
-    # ("nonassoc", 'IFX'),
-    # ("nonassoc", 'ELSE'),
-    ("right", 'EQUAL', 'PLUSEQUAL', 'MINUSEQUAL', 'MULTIPLEEQUAL', 'DIVIDEEQUAL'),
-    # ("left", 'OR'),
-    # ("left", 'AND'),
-    # ("left", '|'),
-    # ("left", '^'),
-    # ("left", '&'),
-    ("nonassoc", 'ISLESS', 'ISMORE', 'ISLESSOREQUAL', 'ISMOREOREQUAL', 'ISNOTEQUAL', 'ISEQUAL'),
-    # ("left", 'SHL', 'SHR'),
+    ("right", '=', 'EQUAL', 'PLUSEQUAL', 'MINUSEQUAL', 'MULTIPLEEQUAL', 'DIVIDEEQUAL'),
+    ("nonassoc", '<', '>', 'ISLESSOREQUAL', 'ISMOREOREQUAL', 'ISNOTEQUAL', 'ISEQUAL'),
     ("left", '+', '-', 'DOTPLUS', 'DOTMINUS'),
     ("left", '*', '/', 'DOTMULTIPLE', 'DOTDIVIDE'),
 )
@@ -25,7 +17,7 @@ precedence = (
 
 def p_error(p):
     if p:
-        print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, scanner.find_tok_column(p),
+        print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, scanner.find_column(p),
                                                                                   p.type, p.value))
     else:
         print("Unexpected end of input")
@@ -55,7 +47,31 @@ def p_instruction(p):
 
 
 def p_assignment(p):
-    """assignment : ID EQUAL operation ';' """
+    """assignment : ID '=' operation ';'
+                | ID '[' INT ',' INT ']' '=' operation ';'
+                | ID '=' '[' rows ']' ';'
+                | ID '=' zeros ';'
+                | ID '=' ones ';'
+                | ID '=' eye ';' """
+def p_zeros(p):
+    """zeros : ZEROS '(' INT ')' """
+
+def p_ones(p):
+    """ones : ONES '(' INT ')' """
+
+def p_eye(p):
+    """eye : EYE '(' INT ')' """
+
+def p_rows(p):
+    """rows : row
+                | rows ';' row """
+
+def p_row(p):
+    """row : nums """
+
+def p_nums(p):
+    """nums : num
+                | nums ',' num """
 
 
 def p_for_instruction(p):
@@ -69,7 +85,8 @@ def p_if_instruction(p):
                 | IF '(' bool_expression ')' instruction ELSE instruction"""
 
 def p_print_instruction(p):
-    """print_instruction : PRINT operations ';'"""
+    """print_instruction : PRINT operations ';'
+                | PRINT STRING ';' """
 
 def p_operations(p):
     """operations : operations ',' operation
@@ -78,6 +95,13 @@ def p_operations(p):
 def p_operation(p):
     """operation : num
                 | ID
+                | '-' ID
+                | ID "'"
+                | '(' operation ')'
+                | operation '+' operation
+                | operation '-' operation
+                | operation '*' operation
+                | operation '/' operation
                 | operation DOTMINUS operation
                 | operation DOTPLUS operation
                 | operation DOTMULTIPLE operation
@@ -97,7 +121,7 @@ def p_compound_instruction(p):
     """compound_instruction : '{' instructions '}'"""
 
 def p_iterator(p):
-    """iterator : ID EQUAL int_or_id ':' int_or_id """
+    """iterator : ID '=' int_or_id ':' int_or_id """
 
 def p_int_or_id(p):
     """int_or_id : ID
@@ -109,18 +133,19 @@ def p_num(p):
 
 def p_bool_expression(p):
     """bool_expression : ID
-                | operation ISLESS operation
-                | operation ISMORE operation
+                | operation EQUAL operation
+                | operation '<' operation
+                | operation '>' operation
                 | operation ISLESSOREQUAL operation
                 | operation ISMOREOREQUAL operation
                 | operation ISNOTEQUAL operation
                 | operation ISEQUAL operation """
 
 def p_assignment_operation(p):
-    """assignment_operation : ID PLUSEQUAL operation
-                | ID MINUSEQUAL operation
-                | ID MULTIPLEEQUAL operation
-                | ID DIVIDEEQUAL operation """
+    """assignment_operation : ID PLUSEQUAL operation ';'
+                | ID MINUSEQUAL operation ';'
+                | ID MULTIPLEEQUAL operation ';'
+                | ID DIVIDEEQUAL operation ';' """
 
 
 
