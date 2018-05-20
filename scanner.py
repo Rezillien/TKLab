@@ -1,6 +1,5 @@
 import ply.lex as lex
 
-
 literals = [
     '+', '-', '*', '/',
     '(', ')', '[', ']', '{', '}',
@@ -104,6 +103,7 @@ def t_WHILE(t):
     r'\bwhile\b'
     return t
 
+
 def t_FOR(t):
     r'\bfor\b'
     return t
@@ -143,22 +143,27 @@ def t_EYE(t):
     r'\beye\b'
     return t
 
+
 def t_NAMEERROR(t):
     r'[+-]?([0-9]+|([0-9]*[.])?[0-9]+)[a-zA-Z]'
     print("Illegal ID name '%s'" % t.value[0])
     t.lexer.skip(1)
 
+
 def t_ID(t):
     r'[a-zA-Z_]\w*'
     return t
+
 
 def t_FLOAT(t):
     r"\d+(\.\d*)|\.\d+"
     return t
 
+
 def t_INT(t):
     r'\d+'
     return t
+
 
 def t_STRING(t):
     r'\"([^\\\n]|(\\.))*?\"'
@@ -170,14 +175,17 @@ def t_COMMENT(t):
     pass
 
 
-
-
 t_ignore = '  \t'
 
 
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
+
+def t_newline2(t):
+    r'(\r\n)+'
+    t.lexer.lineno += len(t.value) / 2
 
 
 def t_error(t):
@@ -193,3 +201,11 @@ def find_column(token):
     if last_cr < 0:
         last_cr = 0
     return token.lexpos - last_cr
+
+
+def input(text):
+    lexer.input(text)
+
+
+def token():
+    return lexer.token()

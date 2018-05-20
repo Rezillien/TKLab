@@ -1,5 +1,5 @@
 # control flow instruction
-
+break;
 N = 10;
 M = 20;
 for i = 1:N {
@@ -7,7 +7,6 @@ for i = 1:N {
         print i, j;
     }
 }
-
 if(N==10)
     print "N==10";
 else if(N!=10)
