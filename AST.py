@@ -4,28 +4,43 @@ class Node(object):
 
 
 class Const(Node):
-    def __init__(self, value2):
+    def __init__(self, value2, type):
         self.value2 = value2
+        self.type = type
 
     def __str__(self):
         return str(self.value2)
 
 
 class Integer(Const):
+    def __init__(self, value2):
+        super().__init__(value2, 'int')
+
     pass
 
 
 class Float(Const):
-    pass
+    def __init__(self, value2):
+        super().__init__(value2, 'float')
+
+
+class String(Const):
+    def __init__(self, value2):
+        super().__init__(value2, 'string')
+
+
+class Matrix(Const):
+    def __init__(self, value2):
+        super().__init__(value2, 'matrix')
 
 
 class Variable(Node):
-    def __init__(self, value):
+    def __init__(self, value, ttype=''):
         self.value = value
-        self.type = type(value)
+        self.type = type(value) if ttype == '' else ttype
 
     def __str__(self):
-        self.printTree()
+        return str(self.value)
 
 
 class InstructionList(Node):
@@ -109,6 +124,30 @@ class Eye(Node):
         self.printTree()
 
 
+class BreakInstruction(Node):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        self.printTree()
+
+
+class ContinueInstruction(Node):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        self.printTree()
+
+
+class ReturnInstruction(Node):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        self.printTree()
+
+
 class ForInstruction(Node):
     def __init__(self, iterator, instruction):
         self.iterator = iterator
@@ -173,6 +212,7 @@ class BinExpression(Node):
         self.operant = operant
         self.left = left
         self.right = right
+        self.type = ''
 
     def __str__(self):
         self.printTree()
@@ -211,6 +251,22 @@ class AssignOperation(Node):
         self.assigmentOperation = assigmentOperation
         self.variable = variable
         self.operation = operation
+
+    def __str__(self):
+        self.printTree()
+
+
+class UnaryMinus(Node):
+    def __init__(self, variable):
+        self.variable = variable
+
+    def __str__(self):
+        self.printTree()
+
+
+class MatrixTransposition(Node):
+    def __init__(self, variable):
+        self.variable = variable
 
     def __str__(self):
         self.printTree()
