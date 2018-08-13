@@ -1,45 +1,101 @@
-#!/usr/bin/python
-from symtable import Symbol
+
+# !/bin/python
+class Type:
+    pass
 
 
-class VariableSymbol(object):
+class TFloat(Type):
+    def __init__(self, value=None):
+        self.value = value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class TInt(Type):
+    def __init__(self, value=None):
+        self.value = value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class TString(Type):
+    def __init__(self, value=None):
+        self.value = value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class VectorType(Type):
+    def __init__(self, value=None, size=0):
+        if value is not None:
+            size = len(value)
+        self.size = size
+        self.value = value
+
+    def __str__(self) -> str:
+        return "Vector:" + str(self.size)
+
+
+class MatrixType(Type):
+    def __init__(self, value=None, width=0, height=0):
+        if value is not None:
+            height = len(value)
+            width = value[0].size
+        self.value = value
+        self.width = width
+        self.height = height
+
+    def __str__(self) -> str:
+        return "Matrix: "+str(self.width) + ";" + str(self.height)
+
+
+class UndefinedType(Type):
+    def __init__(self):
+        self.value = None
+
+    def __str__(self) -> str:
+        return "UnknownType"
+
+
+class NoType(Type):
+    def __str__(self):
+        return "NoType"
+
+
+class Symbol:
+    pass
+
+
+class VariableSymbol(Symbol):
 
     def __init__(self, name, type):
         self.name = name
         self.type = type
-    #
 
-class SymbolTable(object):
 
-    def __init__(self, parent, name): # parent scope and symbol table name
-        self.parent = parent
-        self.name = name
-        self.symbols = {}
-    #
+class SymbolTable:
+    def __init__(self):
+        self.symbols = []
 
-    def put(self, name, symbol): # put variable symbol or fundef under <name> entry
-        self.symbols[name] = symbol
-    #
+    def put(self, name, symbol):
+        self.symbols[-1][name] = symbol
 
-    def get(self, name): # get variable symbol or fundef from <name> entry
-        scope = self
-        while scope is not None:
-            if name in scope.symbols:
-                return scope.symbols[name]
-            scope = scope.parent
+    def get(self, name):
+        for i in range(self.symbols.__len__()-1, -1, -1):
+            if name in self.symbols[i]:
+                return self.symbols[i][name]
         return None
-    #
 
-    def getParentScope(self):
-        return self.parent
-    #
+    def push_scope(self):
+        self.symbols.append({})
 
-    def pushScope(self, name):
-        return SymbolTable(self, name)
-    #
-
-    def popScope(self):
-        self.parent = None
-    #
+    def pop_scope(self):
+        if self.symbols.__len__() == 0:
+            return False
+        self.symbols.pop()
+        return True
 
 

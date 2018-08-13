@@ -1,277 +1,219 @@
-class Node(object):
-    def __str__(self):
-        return self.printTree()
+# 
+class Node:
+    def accept(self, visitor):
+        return visitor.visit(self)
 
 
-class Const(Node):
-    def __init__(self, value2, type):
-        self.value2 = value2
-        self.type = type
-
-    def __str__(self):
-        return str(self.value2)
-
-
-class Integer(Const):
-    def __init__(self, value2):
-        super().__init__(value2, 'int')
-
-    pass
-
-
-class Float(Const):
-    def __init__(self, value2):
-        super().__init__(value2, 'float')
-
-
-class String(Const):
-    def __init__(self, value2):
-        super().__init__(value2, 'string')
-
-
-class Matrix(Const):
-    def __init__(self, value2):
-        super().__init__(value2, 'matrix')
-
-
-class Variable(Node):
-    def __init__(self, value, ttype=''):
+class ConstValue(Node):
+    def __init__(self, value, lineno):
         self.value = value
-        self.type = type(value) if ttype == '' else ttype
-
-    def __str__(self):
-        return str(self.value)
+        self.lineno = lineno
 
 
-class InstructionList(Node):
-    def __init__(self):
-        self.instructions = []
-
-    def addInstruction(self, instr):
-        self.instructions.append(instr)
+class ID(Node):
+    def __init__(self, value, lineno):
+        self.value = value
+        self.lineno = lineno
 
 
-class Rows(Node):
-    def __init__(self):
-        self.row_list = []
-
-    def append_row(self, a):
-        self.row_list.append(a)
-
-    def cons_row(self, row_list, a):
-        self.row_list = list(row_list)
-        self.row_list.append(a)
-
-    def __str__(self):
-        self.printTree()
-
-
-class Row(Node):
-    def __init__(self):
-        self.int_list = []
-
-    def append_int(self, a):
-        self.int_list.append(a)
-
-    def cons_int(self, int_list, a):
-        self.int_list = list(int_list)
-        self.int_list.append(a)
-
-    def __str__(self):
-        self.printTree()
-
-
-class AssignInstruction(Node):
-    def __init__(self, variable, operation):
-        self.variable = variable
-        self.operation = operation
-
-    def __str__(self):
-        self.printTree()
-
-
-class ElementAssign(Node):
-    def __init__(self, x, y, operation):
-        self.x = x
-        self.y = y
-        self.operation = operation
-
-    def __str__(self):
-        self.printTree()
-
-
-class Zeros(Node):
-    def __init__(self, num):
-        self.num = num
-
-    def __str__(self):
-        self.printTree()
-
-
-class Ones(Node):
-    def __init__(self, num):
-        self.num = num
-
-    def __str__(self):
-        self.printTree()
-
-
-class Eye(Node):
-    def __init__(self, num):
-        self.num = num
-
-    def __str__(self):
-        self.printTree()
-
-
-class BreakInstruction(Node):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        self.printTree()
-
-
-class ContinueInstruction(Node):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        self.printTree()
-
-
-class ReturnInstruction(Node):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        self.printTree()
-
-
-class ForInstruction(Node):
-    def __init__(self, iterator, instruction):
-        self.iterator = iterator
-        self.instruction = instruction
-
-    def __str__(self):
-        self.printTree()
-
-
-class WhileInstruction(Node):
-    def __init__(self, boolExpr, instruction):
-        self.boolExpr = boolExpr
-        self.instruction = instruction
-
-    def __str__(self):
-        self.printTree()
-
-
-class IfInstruction(Node):
-    def __init__(self, boolExpr, instruction):
-        self.boolExpr = boolExpr
-        self.instruction = instruction
-
-    def __str__(self):
-        self.printTree()
-
-
-class IfElseInstruction(Node):
-    def __init__(self, boolExpr, instruction, elseInstruction):
-        self.boolExpr = boolExpr
-        self.instruction = instruction
-        self.elseInstruction = elseInstruction
-
-    def __str__(self):
-        self.printTree()
-
-
-class PrintInstruction(Node):
-    def __init__(self, operation1, operation2):
-        if operation2 is None:
-            self.operation1 = operation1
-            self.twoOperations = False
-        else:
-            self.operation1 = operation1
-            self.operation2 = operation2
-            self.twoOperations = True
-
-    def __str__(self):
-        self.printTree()
-
-
-class GroupedExpression(Node):
-    def __init__(self, operation):
-        self.operation = operation
-
-    def __str__(self):
-        self.printTree()
-
-
-class BinExpression(Node):
-    def __init__(self, operant, left, right):
-        self.operant = operant
-        self.left = left
-        self.right = right
-        self.type = ''
-
-    def __str__(self):
-        self.printTree()
-
-
-class CompoundInstruction(Node):
-    def __init__(self, instructions):
+class Program(Node):
+    def __init__(self, instructions, lineno):
         self.instructions = instructions
-
-    def __str__(self):
-        self.printTree()
+        self.lineno = lineno
 
 
-class Iterator(Node):
-    def __init__(self, variable, iterator, list):
-        self.variable = variable
-        self.iterator = iterator
-        self.list = list
-
-    def __str__(self):
-        self.printTree()
+class Instructions(Node):
+    def __init__(self, instructions, lineno):
+        self.instructions = instructions
+        self.lineno = lineno
 
 
-class BoolExpression(Node):
-    def __init__(self, symbol, operation1, operation2):
-        self.symbol = symbol
-        self.operation1 = operation1
-        self.operation2 = operation2
+class Range(Node):
+    def __init__(self, start, end, lineno, jump=None):
+        if jump is None:
+            jump = ConstValue(1, lineno)
+        self.start = start
+        self.end = end
+        self.jump = jump
+        self.lineno = lineno
 
-    def __str__(self):
-        self.printTree()
-
-
-class AssignOperation(Node):
-    def __init__(self, assigmentOperation, variable, operation):
-        self.assigmentOperation = assigmentOperation
-        self.variable = variable
-        self.operation = operation
-
-    def __str__(self):
-        self.printTree()
+    def __repr__(self):
+        return '[ {} : {} : {} ]'.format(self.start, self.end, self.jump)
 
 
-class UnaryMinus(Node):
-    def __init__(self, variable):
-        self.variable = variable
+class For(Node):
+    def __init__(self, id, range, body, lineno):
+        self.id = id
+        self.range = range
+        self.body = body
+        self.lineno = lineno
 
-    def __str__(self):
-        self.printTree()
-
-
-class MatrixTransposition(Node):
-    def __init__(self, variable):
-        self.variable = variable
-
-    def __str__(self):
-        self.printTree()
+    def __repr__(self):
+        return 'FOR {} IN {} DO {}'.format(self.id, self.range, self.body)
 
 
-class Instruction(Node):
-    def __init__(self, instruction):
-        self.instruction = instruction
+class While(Node):
+    def __init__(self, condition, body, lineno):
+        self.condition = condition
+        self.body = body
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'WHILE {} DO {}'.format(self.condition, self.body)
+
+
+class If(Node):
+    def __init__(self, condition, body, lineno):
+        self.condition = condition
+        self.body = body
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'IF {} THEN {}'.format(self.condition, self.body)
+
+
+class IfElse(Node):
+    def __init__(self, condition, body, else_body, lineno):
+        self.condition = condition
+        self.body = body
+        self.else_body = else_body
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'IF {} THEN {} ELSE {}'.format(self.condition, self.body, self.else_body)
+
+
+class Break(Node):
+    def __init__(self, lineno):
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'BREAK'
+
+
+class Continue(Node):
+    def __init__(self, lineno):
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'CONTINUE'
+
+
+class Return(Node):
+    def __init__(self, result, lineno):
+        self.result = result
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'RETURN( {} )'.format(self.result)
+
+
+class Print(Node):
+    def __init__(self, printable, lineno):
+        self.printable = printable
+        self.lineno = lineno
+
+    def __repr__(self):
+        return 'PRINT( {} )'.format(self.printable)
+
+
+class Condition(Node):
+    def __init__(self, left, operator, right, lineno):
+        self.left = left
+        self.operator = operator
+        self.right = right
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '( {} {} {} )'.format(self.left, self.operator, self.right)
+
+
+class Assignment(Node):
+    def __init__(self, left, operator, right, lineno):
+        self.left = left
+        self.operator = operator
+        self.right = right
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '{} {} {}'.format(self.left, self.operator, self.right)
+
+
+class AssignTo(Node):
+    def __init__(self, id, lineno):
+        self.id = id
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '{}'.format(self.id)
+
+
+class Access(Node):
+    def __init__(self, id, specifier, lineno):
+        self.id = id
+        self.specifier = specifier
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '{}[ {} ]'.format(self.id, self.specifier)
+
+
+class Expression(Node):
+    def __init__(self, left, operator, right, lineno):
+        self.left = left
+        self.operator = operator
+        self.right = right
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '( {} {} {} )'.format(self.left, self.operator, self.right)
+
+
+class Transposition(Node):
+    def __init__(self, value, lineno):
+        self.value = value
+        self.lineno = lineno
+
+    def __repr__(self):
+        return "( {}' )".format(self.value)
+
+
+class Negation(Node):
+    def __init__(self, value, lineno):
+        self.value = value
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '( -{} )'.format(self.value)
+
+
+class Function(Node):
+    def __init__(self, name, argument, lineno):
+        self.name = name
+        self.argument = argument
+        self.lineno = lineno
+
+    def __repr__(self):
+        return '{}( {} )'.format(self.name, self.argument)
+
+
+class Error(Node):
+    def __init__(self):
+        pass
+
+
+class Matrix(Node):
+    def __init__(self, rows, lineno):
+        self.rows = rows
+        self.lineno = lineno
+
+
+class Sequence(Node):
+    def __init__(self, values, lineno):
+        self.values = values
+        self.lineno = lineno
+
+    def append(self, value):
+        self.values.append(value)
+
+

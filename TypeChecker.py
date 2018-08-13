@@ -1,238 +1,387 @@
-#!/usr/bin/python
+# !/bin/python
 import AST
-from collections import defaultdict
-from SymbolTable import SymbolTable
-
-TTYPE = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 0)))
-
-# define operations for integers
-for op in ('+', '-', '*', '/', '%', '<<', '>>', '|', '&', '^',
-           '<', '>', '<=', '>=', '==', '!=', '&&', '||'):
-    TTYPE[op]['int']['int'] = 'int'
-
-# define arithmetic operations for floats
-for op in ('+', '-', '*', '/'):
-    TTYPE[op]['float']['float'] = 'float'
-    TTYPE[op]['float']['int'] = 'float'
-    TTYPE[op]['int']['float'] = 'float'
-
-# define logical operations on floats
-for op in ('<', '>', '<=', '>=', '==', '!=', '&&', '||'):
-    TTYPE[op]['float']['float'] = 'int'
-
-TTYPE['+']['string']['string'] = 'string'
-TTYPE['*']['string']['int'] = 'string'
-
-# define logical operations for strings
-for op in ('<', '>', '<=', '>=', '==', '!='):  # , '&&', '||'
-    TTYPE[op]['string']['string'] = 'int'
-
-# define type casts
-TTYPE['cast']['int']['float'] = ['float', 'up']
-TTYPE['cast']['float']['int'] = ['int', 'down']
-
-
-class NodeVisitor(object):
-
-    def visit(self, node):
-        method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, self.generic_visit)
-        return visitor(node)
-
-    def generic_visit(self, node):  # Called if no explicit visitor function exists for a node.
-        if isinstance(node, list):
-            for elem in node:
-                self.visit(elem)
-        else:
-            for child in node.children:
-                if isinstance(child, list):
-                    for item in child:
-                        if isinstance(item, AST.Node):
-                            self.visit(item)
-                elif isinstance(child, AST.Node):
-                    self.visit(child)
-
-    # simpler version of generic_visit, not so general
-    # def generic_visit(self, node):
-    #    for child in node.children:
-    #        self.visit(child)
-
-
-class TypeChecker(NodeVisitor):
-
-    def __init__(self):
-        self.scope = SymbolTable(None, "global")
-
-    def visit_Node(self, node):
-        print("visit_Node")
-        pass
-
-    def visit_Const(self, node):
-        print("visit_Const")
-
-    def visit_String(self, node):
-        # print("visit_String")
-        return 'string'
-
-    def visit_Integer(self, node):
-        # print("visit_Integer")
-        return 'int'
-
-    def visit_Float(self, node):
-        # print("visit_Float")
-        return 'float'
-
-    def visit_Matrix(self, node):
-        # print("visit_Float")
-        return 'matrix'
-
-    def visit_Variable(self, node):
-        # print("visit_Variable")
-        if self.scope.get(node.value) is None:
-            print("Error: Undeclared variable '{}': line {}".format(node.value, 0))
-            return
-        return self.scope.get(node.value)
-
-    def visit_InstructionList(self, node):
-        for i in node.instructions:
-            self.visit(i)
-
-    def visit_Rows(self, node):
-        print("visit_Rows")
-        pass
-
-    def visit_Row(self, node):
-        print("visit_Row")
-        pass
-
-    def visit_BreakInstruction(self, node):
-        # print("visit_BreakInstruction")
-        pass
-
-    def visit_ContinueInstruction(self, node):
-        # print("visit_ContinueInstruction")
-        pass
-
-    def visit_ReturnInstruction(self, node):
-        # print("visit_ReturnInstruction")
-        pass
-
-    def visit_AssignInstruction(self, node):
-        # print("visit_AssignInstruction")
-        self.visit(node.operation)
-        if self.scope.get(node.variable) is None:
-            self.scope.put(node.variable, node.operation.type)
-
-    def visit_ElementAssign(self, node):
-        print("visit_ElementAssign")
-        pass
-
-    def visit_Zeros(self, node):
-        print("visit_Zeros")
-        pass
-
-    def visit_Ones(self, node):
-        print("visit_Ones")
-        pass
-
-    def visit_Eye(self, node):
-        print("visit_Eye")
-        pass
-
-    def visit_ForInstruction(self, node):
-        # print("visit_ForInstruction")
-        self.scope = self.scope.pushScope("for")
-        self.visit(node.iterator)
-        self.visit(node.instruction)
-        self.scope = self.scope.getParentScope()
-
-    def visit_WhileInstruction(self, node):
-        # print("visit_WhileInstruction")
-        self.scope = self.scope.pushScope("while")
-        self.visit(node.boolExpr)
-        self.visit(node.instruction)
-        self.scope = self.scope.getParentScope()
-        pass
-
-    def visit_IfInstruction(self, node):
-        # print("visit_IfInstruction")
-        self.scope = self.scope.pushScope("if")
-
-        self.visit(node.boolExpr)
-        self.visit(node.instruction)
-        self.scope = self.scope.getParentScope()
-
-        pass
-
-    def visit_IfElseInstruction(self, node):
-        # print("visit_IfElseInstruction")
-        self.scope = self.scope.pushScope("if")
-        self.visit(node.boolExpr)
-        self.visit(node.instruction)
-        self.visit(node.elseInstruction)
-        self.scope = self.scope.getParentScope()
-        pass
-
-    def visit_PrintInstruction(self, node):
-        # print("visit_PrintInstruction")
-        self.visit(node.operation1)
-        # print(type(node.operation1))
-        if node.twoOperations:
-            # print(type(node.operation2))
-            self.visit(node.operation2)
-        pass
-
-    def visit_GroupedExpression(self, node):
-        # print("visit_GroupedExpression")
-        self.visit(node.operation)
-        pass
-
-    def visit_BinExpression(self, node):
-        self.visit(node.left)
-        self.visit(node.right)
-        node.type = TTYPE[node.operant][node.left.type][node.right.type]
-        # print("visit_BinExpression")
-        pass
-
-    def visit_CompoundInstruction(self, node):
-        # print("visit_CompoundInstruction")
-        if node.instructions:
-            self.visit(node.instructions)
-        pass
-
-    def visit_Iterator(self, node):
-        # print("visit_Iterator")
-        iteratorType = self.visit(node.iterator)
-        if self.scope.get(node.variable) is not None:
-            print("Error: Variable already in use '{}': line {}".format(node.variable, 0))
-        self.scope.put(node.variable, iteratorType)
-        limitType = self.visit(node.list)
-        if iteratorType != 'int' or limitType != 'int':
-            print("Error: Invalid iterator type '{}': line {}".format(iteratorType, 0))
-        pass
-
-    def visit_BoolExpression(self, node):
-        # print("visit_BoolExpression")
-        self.visit(node.operation1)
-        self.visit(node.operation2)
-        pass
-
-    def visit_AssignOperation(self, node):
-        # print("visit_AssignOperation")
-        self.visit(node.variable)
-        self.visit(node.operation)
-        pass
-
-    def visit_UnaryMinus(self, node):
-        print("visit_UnaryMinus")
-
-
-    def visit_MatrixTransposition(self, node):
-        print("visit_MatrixTransposition")
-
-
-    def visit_Instruction(self, node):
-        # print("visit_Instruction")
-
-        self.visit(node.instruction)
+from SymbolTable import SymbolTable, TFloat, TString, TInt, VectorType, UndefinedType, MatrixType, NoType 
+ 
+ 
+class NodeVisitor(object): 
+ 
+    def visit(self, node): 
+        method = 'visit_' + node.__class__.__name__ 
+        visitor = getattr(self, method, self.generic_visit) 
+        return visitor(node) 
+ 
+    def generic_visit(self, node): 
+        if isinstance(node, list): 
+            for elem in node: 
+                self.visit(elem) 
+        else: 
+            for child in node.children: 
+                if isinstance(child, list): 
+                    for item in child: 
+                        if isinstance(item, AST.Node): 
+                            self.visit(item) 
+                elif isinstance(child, AST.Node): 
+                    self.visit(child) 
+ 
+ 
+def checkType(value, typ): 
+    return type(value) is typ 
+ 
+ 
+class TypeChecker(NodeVisitor): 
+ 
+    def __init__(self): 
+        self.errors = False 
+        self.symbol_table = SymbolTable() 
+ 
+ 
+    @staticmethod 
+    def checkCompType(type1, type2, lineno): 
+        if checkType(type1, VectorType) and checkType(type2, VectorType): 
+            if type1.size is not None and type2.size is not None and type1.size != type2.size:
+                print("different vector sizes: ", lineno) 
+                return TInt() 
+            else: 
+                return TInt() 
+        elif checkType(type1, MatrixType) and checkType(type2, MatrixType): 
+            if type1.width is not None and type2.width is not None and type1.height is not None and type2.height is not None and ( 
+                    type1.width != type2.width or type1.height != type2.height): 
+                print("different matrix sizes: ", lineno) 
+                return TInt() 
+            else: 
+                return TInt() 
+        elif (checkType(type1, TFloat) or checkType(type1, TInt)) and ( 
+                checkType(type2, TFloat) or checkType(type2, TInt)): 
+            return TInt() 
+        elif checkType(type1, TString) and checkType(type2, TString): 
+            return TInt() 
+        return None 
+ 
+    @staticmethod 
+    def checkMatrixType(type1, type2, lineno): 
+        if checkType(type1, VectorType) and checkType(type2, VectorType): 
+            if type1.size is None or type2.size is None: 
+                return VectorType() 
+            elif type1.size != type2.size: 
+                print("different vector sizes: ", lineno) 
+                return UndefinedType() 
+            else: 
+                return VectorType(size=type1.size) 
+        elif checkType(type1, MatrixType) and checkType(type2, MatrixType): 
+            if type1.width is None or type2.width is None or type1.height is None or type2.height is None: 
+                return MatrixType() 
+            elif type1.width != type2.width or type1.height != type2.height: 
+                print("different matrix sizes: ", lineno) 
+                return UndefinedType() 
+            else: 
+                return MatrixType(width=type1.width, height=type1.height) 
+        elif checkType(type1, VectorType) and (checkType(type2, TFloat) or checkType(type2, TInt)): 
+            if type1.size is not None: 
+                return VectorType(size=type1.size) 
+            else: 
+                return VectorType() 
+        elif checkType(type1, MatrixType) and (checkType(type2, TFloat) or checkType(type2, TInt)): 
+            if type1.width is None or type2.width is None: 
+                return MatrixType() 
+            else: 
+                return MatrixType(width=type1.width, height=type1.height) 
+        print("different sizes: ", lineno) 
+        return None 
+ 
+ 
+    @staticmethod 
+    def checkExprType(type1, type2, op, lineno): 
+        result = None 
+        if checkType(type1, UndefinedType) or checkType(type2, UndefinedType): 
+            result = UndefinedType() 
+        elif op == '.+' or op == '.-' or op == '.*' or op == './': 
+            result = TypeChecker.checkMatrixType(type1, type2, lineno) 
+        elif op == "==" or op == "!=" or op == ">=" or op == "<=" or op == ">" or op == "<": 
+            result = TypeChecker.checkCompType(type1, type2, lineno) 
+        else: 
+            result = TypeChecker.checkBasicType(type1, type2, op) 
+        if result is None: 
+            return UndefinedType() 
+        else: 
+            return result 
+    @staticmethod 
+    def checkBasicType(type1, type2, op): 
+        if op == '+': 
+            if checkType(type1, TInt) and checkType(type2, TInt): 
+                if type1.value is not None and type2.value is not None: 
+                    return TInt(type1.value + type2.value) 
+                else: 
+                    return TInt() 
+            elif (checkType(type1, TFloat) or checkType(type1, TInt)) and ( 
+                    checkType(type2, TFloat) or checkType(type2, TInt)): 
+                if type1.value is not None and type2.value is not None: 
+                    return TFloat(type1.value + type2.value) 
+                else: 
+                    return TFloat() 
+            elif checkType(type1, TString) and checkType(type2, TString): 
+                if type1.value is not None and type2.value is not None: 
+                    return TString(type1.value + type2.value) 
+                else: 
+                    return TString() 
+        elif op == '-': 
+            if checkType(type1, TInt) and checkType(type2, TInt): 
+                if type1.value is not None and type2.value is not None: 
+                    return TInt(type1.value - type2.value) 
+                else: 
+                    return TInt() 
+            elif (checkType(type1, TFloat) or checkType(type1, TInt)) and ( 
+                    checkType(type2, TFloat) or checkType(type2, TInt)): 
+                if type1.value is not None and type2.value is not None: 
+                    return TFloat(type1.value - type2.value) 
+                else: 
+                    return TFloat() 
+ 
+        elif op == '/': 
+            if checkType(type1, TInt) and checkType(type2, TInt): 
+                if type1.value is not None and type2.value is not None: 
+                    return TInt(type1.value / type2.value) 
+                else: 
+                    return TInt() 
+            elif (checkType(type1, TFloat) or checkType(type1, TInt)) and ( 
+                    checkType(type2, TFloat) or checkType(type2, TInt)): 
+                if type1.value is not None and type2.value is not None: 
+                    return TFloat(type1.value / type2.value) 
+                else: 
+                    return TFloat() 
+ 
+        elif op == '*': 
+            if checkType(type1, TInt) and checkType(type2, TInt): 
+                if type1.value is not None and type2.value is not None: 
+                    return TInt(type1.value * type2.value) 
+                else: 
+                    return TInt() 
+            elif (checkType(type1, TFloat) or checkType(type1, TInt)) and ( 
+                    checkType(type2, TFloat) or checkType(type2, TInt)): 
+                if type1.value is not None and type2.value is not None: 
+                    return TFloat(type1.value * type2.value) 
+                else: 
+                    return TFloat() 
+            elif checkType(type1, TString) and checkType(type2, TString): 
+                if type1.value is not None and type2.value is not None: 
+                    return TString(type1.value * type2.value) 
+                else: 
+                    return TString() 
+        return None 
+ 
+    def putVariable(self, id, symbol): 
+        name = id.value 
+        self.symbol_table.put(name, symbol) 
+        return symbol 
+ 
+    def visit_ConstValue(self, node): 
+        if checkType(node.value, float): 
+            return TFloat(node.value) 
+        if checkType(node.value, str): 
+            return TString(node.value) 
+        if checkType(node.value, int): 
+            return TInt(node.value) 
+        return UndefinedType() 
+ 
+    def visit_Program(self, node): 
+        self.symbol_table.push_scope() 
+        for instruction in node.instructions: 
+            self.visit(instruction) 
+        self.symbol_table.pop_scope() 
+ 
+    def visit_Instructions(self, node): 
+        self.symbol_table.push_scope() 
+        for instruction in node.instructions: 
+            self.visit(instruction) 
+        self.symbol_table.pop_scope() 
+ 
+    def visit_ID(self, node): 
+        id = self.symbol_table.get(node.value) 
+        if id is None: 
+            print("undefined variable: " + str(node.lineno)) 
+            return UndefinedType() 
+        else: 
+            return self.symbol_table.get(node.value) 
+ 
+    def visit_Range(self, node): 
+        type1 = self.visit(node.start) 
+        type2 = self.visit(node.jump) 
+        self.visit(node.end) 
+        return self.checkExprType(type1, type2, '+', node.lineno) 
+ 
+    def visit_While(self, node): 
+        self.symbol_table.push_scope() 
+        self.visit(node.condition) 
+        self.visit(node.body) 
+        self.symbol_table.pop_scope() 
+        return NoType() 
+ 
+    def visit_For(self, node): 
+        self.symbol_table.push_scope() 
+        typ = self.visit(node.range) 
+        self.putVariable(node.id, typ) 
+        self.visit(node.body) 
+        self.symbol_table.pop_scope() 
+ 
+    def visit_If(self, node): 
+        self.symbol_table.push_scope() 
+        self.visit(node.condition) 
+        self.visit(node.body) 
+        self.symbol_table.pop_scope() 
+        return NoType() 
+ 
+    def visit_IfElse(self, node): 
+        self.symbol_table.push_scope() 
+        self.visit(node.condition) 
+        self.visit(node.body) 
+        self.symbol_table.pop_scope() 
+        self.symbol_table.push_scope() 
+        self.visit(node.else_body) 
+        self.symbol_table.pop_scope() 
+        return NoType() 
+ 
+    def visit_Continue(self, node): 
+        return NoType() 
+ 
+    def visit_Break(self, node): 
+        return NoType() 
+ 
+    def visit_Return(self, node): 
+        return self.visit(node.result) 
+ 
+    def visit_Condition(self, node): 
+        type1 = self.visit(node.left) 
+        type2 = self.visit(node.right) 
+        return self.checkExprType(type1, type2, node.operator, node.lineno) 
+ 
+    def visit_Print(self, node): 
+        self.visit(node.printable) 
+        return NoType() 
+ 
+    def visit_Assignment(self, node): 
+        type1 = self.visit(node.left) 
+        type2 = self.visit(node.right) 
+        val = None 
+        if node.operator == "=": 
+            val = type2 
+        else: 
+            if type1 is None: 
+                val = UndefinedType() 
+            else: 
+                val = self.checkExprType(type1, type2, node.operator[0], node.lineno) 
+        if checkType(node.left.id, AST.Access): 
+            return val 
+        else: 
+            return self.putVariable(node.left.id, val) 
+ 
+    def visit_Expression(self, node): 
+        type1 = self.visit(node.left) 
+        type2 = self.visit(node.right) 
+        return self.checkExprType(type1, type2, node.operator, node.lineno) 
+ 
+    def visit_Access(self, node): 
+        typ = self.visit(node.id) 
+        spec = self.visit(node.specifier) 
+        result = None 
+        if checkType(typ, UndefinedType): 
+            result = None 
+        elif checkType(typ, VectorType): 
+            if spec.size != 1: 
+                print("vector problem: " + str(spec) + " line: " + str(node.lineno)) 
+                result = None 
+            else: 
+                i = spec.value[0].value 
+                if not checkType(i, int): 
+                    result = None 
+                elif i >= typ.size or i < 0: 
+                    print("Index out of bound: " + str(node.lineno)) 
+                    result = None 
+                elif typ.value is not None: 
+                    result = typ.value[i] 
+                else: 
+                    result = None 
+        elif checkType(typ, MatrixType): 
+            if spec.size != 2: 
+                print("matrix problem: " + str(spec) + " line: " + str(node.lineno)) 
+                result = None 
+            else: 
+                i = spec.value[0].value 
+                j = spec.value[1].value 
+                if not checkType(j, int) or not checkType(j, int): 
+                    result = None 
+                elif i >= typ.width or j >= typ.height or i < 0 or j < 0: 
+                    print("Index out of bound: " + str(node.lineno)) 
+                    result = None 
+                elif typ.value is not None: 
+                    result = typ.value[i].value[j] 
+                else: 
+                    result = None 
+        else: 
+            print(str(typ) + "cannot use access: " + str(node.lineno)) 
+        if result is None: 
+            return UndefinedType() 
+        else: 
+            return result 
+ 
+    def visit_AssignTo(self, node): 
+        if checkType(node.id, AST.Access): 
+            return self.visit(node.id) 
+        else: 
+            name = node.id.value 
+            return self.symbol_table.get(name) 
+ 
+    def visit_Transposition(self, node): 
+        typ = self.visit(node.value) 
+        if checkType(typ, UndefinedType): 
+            return UndefinedType() 
+        elif checkType(typ, MatrixType): 
+            return MatrixType(width=typ.height, height=typ.width) 
+        else: 
+            print(str(typ) + " can't be transposed: " + str(node.lineno)) 
+            return UndefinedType() 
+ 
+    def visit_Negation(self, node): 
+        typ = self.visit(node.value) 
+        if checkType(typ, TInt) or checkType(typ, TFloat): 
+            typ.value = -typ.value 
+        elif checkType(typ, TString): 
+            return UndefinedType() 
+        else: 
+            typ.value = UndefinedType() 
+        return typ 
+ 
+    def visit_Sequence(self, node): 
+        values = [] 
+        for val in node.values: 
+            values.append(self.visit(val)) 
+        return VectorType(values) 
+ 
+    def visit_Function(self, node): 
+        typ = self.visit(node.argument) 
+        if checkType(typ, TInt): 
+            value = typ.value 
+            if value is None or value >= 0: 
+                return MatrixType(width=typ.value, height=typ.value) 
+            else: 
+                print("initialization out of bound: " + str(node.lineno) + " value: " + str(value)) 
+        if checkType(typ, UndefinedType): 
+            return MatrixType() 
+        print("Function initialize with wrong parameter, wanted type Int, got {1} at line {0}" 
+              .format(node.lineno, typ)) 
+        return UndefinedType() 
+ 
+    def visit_Matrix(self, node): 
+        values = [] 
+        for val in node.rows: 
+            values.append(self.visit(val)) 
+        size = values[0].size 
+        for val in values: 
+            if size != val.size: 
+                print("different matrix sizes" + str(node.lineno)) 
+                return MatrixType() 
+        if len(values) == 1: 
+            return values[0] 
+        else: 
+            return MatrixType(values) 
+ 
+    def visit_Error(self, node): 
         pass
